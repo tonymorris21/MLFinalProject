@@ -1,5 +1,5 @@
 
-from flask import Blueprint,render_template, redirect, url_for, request, session
+from flask import Blueprint,render_template, redirect, url_for, request, session, Response
 
 from models import File
 
@@ -579,14 +579,18 @@ def encodingValues(fileid,featurename,change):
     print(df.head)
     data =getFeatureData(df,df[featurename],featurename,"Categorical")
     return data
-@filedata.route('/filedata/<fileid>/downloadcleandata', methods=['GET', 'POST'])
+@filedata.route('/filedata/<fileid>/downloadcleandata')
 def downloaddata(fileid):
     file = File.query.filter_by(fileid=fileid).first()
-    csv = file.location
-    return send_file(file.location,
-                     mimetype='text/csv',
-                     attachment_filename='data.csv',
-                     as_attachment=True)
+    df = pd.read_feather(file.featherlocation)
+    #convert df to csv
+    csv = df.to_csv(index=False)
+
+    return Response(
+        csv,
+        mimetype="text/csv",
+        headers={"Content-disposition":
+                 "attachment; filename=data.csv"})
 
 @filedata.route('/filedata/<fileid>/clamp/<featurename>/datatype/<datatype>/upper/<uppervalue>/lower/<lowervalue>', methods=['GET', 'POST'])
 def clampTransformation(fileid, featurename,datatype,uppervalue,lowervalue):
@@ -649,6 +653,3 @@ def whiskerValues(Q1,Q3):
     lowervalue=float(Q1)-1.5*(float(Q3)-float(Q1))
     values = str(uppervalue) + "," + str(lowervalue)
     return values
-
-
-#https://library-cc.tudublin.ie/articles/3928395.3124/1.PDF

@@ -94,7 +94,6 @@
 
       $(document).on('click', '#deleteicon',function () {
         var modelid = $(this).closest('.card').find('h4').attr('modelid');
-        alert(modelid);
         console.log("test");
         var url = "/deletemodel/" + modelid;
         $(this).closest('.card').remove();
